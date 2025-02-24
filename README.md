@@ -1,1 +1,3 @@
-Odin project to tackle advanced forms handling users
+Odin Flight Booker
+FLIGHT SEARCH FORM ON RUBY ON RAILS 
+proj
