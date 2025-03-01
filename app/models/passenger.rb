@@ -1,6 +1,6 @@
 class Passenger < ApplicationRecord
-  belongs_to :booking
+  has_many :booking_passengers
+  has_many :bookings, through: :booking_passengers
 
-  validates :name, :email, presence: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  accepts_nested_attributes_for :bookings
 end

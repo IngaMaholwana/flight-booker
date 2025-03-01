@@ -1,8 +1,8 @@
 class Booking < ApplicationRecord
   belongs_to :flight
-  has_many :passengers, dependent: :destroy
 
-  accepts_nested_attributes_for :passengers
+  has_many :booking_passengers
+  has_many :passengers, through: :booking_passengers
 
-  validates :flight_id, presence: true
+  accepts_nested_attributes_for :passengers, reject_if: lambda { |attributes| attributes["name"].blank? || attributes["email"].blank? }
 end

@@ -10,27 +10,36 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_01_06_180722) do
+ActiveRecord::Schema[7.2].define(version: 2024_11_05_070548) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "airports", force: :cascade do |t|
-    t.string "code"
+    t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
+  create_table "booking_passengers", force: :cascade do |t|
+    t.bigint "booking_id"
+    t.bigint "passenger_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_booking_passengers_on_booking_id"
+    t.index ["passenger_id"], name: "index_booking_passengers_on_passenger_id"
+  end
+
   create_table "bookings", force: :cascade do |t|
-    t.bigint "flight_id", null: false
+    t.bigint "flight_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["flight_id"], name: "index_bookings_on_flight_id"
   end
 
   create_table "flights", force: :cascade do |t|
-    t.bigint "departure_airport_id", null: false
-    t.bigint "arrival_airport_id", null: false
-    t.datetime "start_time"
+    t.bigint "departure_airport_id"
+    t.bigint "arrival_airport_id"
+    t.datetime "start"
     t.integer "duration"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -41,14 +50,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_06_180722) do
   create_table "passengers", force: :cascade do |t|
     t.string "name"
     t.string "email"
-    t.bigint "booking_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["booking_id"], name: "index_passengers_on_booking_id"
   end
 
-  add_foreign_key "bookings", "flights"
   add_foreign_key "flights", "airports", column: "arrival_airport_id"
   add_foreign_key "flights", "airports", column: "departure_airport_id"
-  add_foreign_key "passengers", "bookings"
 end

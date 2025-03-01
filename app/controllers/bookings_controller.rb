@@ -1,36 +1,34 @@
 class BookingsController < ApplicationController
-  before_action :validate_search_params, only: [:new]
-
-  def show
-    @booking = Booking.find(params[:id])
-    @passengers = params[:passengers].to_i
-  end
   def new
     @flight = Flight.find(params[:flight_id])
-    @booking = Booking.new(flight: @flight)
-    @passengers = params[:passengers].to_i
+    @ticket_count = Integer(params[:ticket_count])
 
-    @passengers.times { @booking.passengers.build }
+    @booking = @flight.bookings.new
+    @ticket_count.times { @booking.passengers.build }
   end
 
   def create
-    @booking = Booking.new(booking_params)
+    flight = Flight.find(params[:booking][:flight_id])
+    @booking = flight.bookings.new()
+
+    params[:booking][:passengers_attributes].each do |i, passenger|
+      created_passenger = Passenger.find_or_create_by(email: passenger[:email]) do |new_p|
+        new_p.name = passenger[:name]
+      end
+      @booking.passengers << created_passenger
+    end
+
     if @booking.save
-      redirect_to @booking, notice: "Booking successfully created!"
+      @booking.passengers.each do |user|
+        PassengerMailer.with(user: user, flight: flight, all_passengers: @booking.passengers).welcome_email.deliver_now
+      end
+      redirect_to @booking
     else
-      render :new, alert: "There was an error creating your booking. Please try again."
+      render new
     end
   end
 
-  private 
-
-  def validate_search_params
-    if params[:flight_id].blank? || params[:passengers].blank?
-      redirect_to root_path, alert: "Please select a flight and specify the number of passengers before proceeding."
-    end
-  end
-
-  def booking_params
-    params.require(:booking).permit(:flight_id, passengers_attributes: [:name, :email])
+  def show
+    @booking = Booking.find(params[:id])
   end
 end

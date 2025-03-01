@@ -1,80 +1,51 @@
-
-<div class="container py-4">
-  <h1>Search Flights</h1>
-
-  <div class="row justify-content-center pt-4">
-    <div class="col px-0">
-      <div class="card shadow-sm p-3 bg-light">
-        <%= form_with url: flights_path, method: :get, local: true, class: "row g-3 align-items-lg-end align-items-sm-center justify-content-between flex-lg-row flex-sm-column" do |form| %>
-          <!-- Departure Airport -->
-          <div class="col-12 col-md-12 col-lg-2">
-            <%= form.label :departure_airport, "From", class: "form-label", for: "departure_airport_id" %>
-            <%= form.select :departure_code, options_for_select(@airports.map { |a| [a.code, a.code] }, @departure_code), { prompt: "Select Departure Airport" }, class: "form-select", id: "departure_airport_id" %>
-          </div>
-
-          <!-- Arrival Airport -->
-          <div class="col-12 col-md-12 col-lg-2">
-            <%= form.label :arrival_airport, "To", class: "form-label", for: "arrival_airport_id" %>
-            <%= form.select :arrival_code, options_for_select(@airports.map { |a| [a.code, a.code] }, @arrival_code), { prompt: "Select Arrival Airport" }, class: "form-select", id: "arrival_airport_id" %>
-          </div>
-
-          <!-- Date Selection -->
-          <div id="htmlTarget" class="col-12 col-md-12 col-lg-3">
-            <%= form.label :flight_date, "Departure", class: "form-label", for: "flight_date" %>
-            <%= form.date_field :date, value: @selected_date, class: "form-control", min: @available_dates.min, max: @available_dates.max, id: "flight_date" %>
-          </div> 
-
-          <!-- Passengers -->
-          <div class="col-12 col-md-12 col-lg-3">
-            <%= form.label :passengers, "Passengers", class: "form-label", for: "passengers" %>
-            <%= form.select :passengers, (1..4).to_a, { prompt: "Select Number of Passengers" }, class: "form-select", id: "passengers" %>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="col-12 col-sm-6 col-md-auto">
-            <%= form.submit "Search", class: "btn btn-danger px-4 py-2 w-100" %>
-          </div>
-        <% end %>
-      </div>
-    </div>
+<%# Search Form %>
+<%= form_with url: "/flights/", method: :get do |form| %>
+  <div>
+    <%= form.label :departure_airport %>
+    <%= select_tag(:departure_code, options_for_select(@airports)) %>
   </div>
 
-  <!-- Reset Button -->
-  <div class="mt-3 d-flex flex-row-reverse">
-    <div class="ms-4">
-      <%= button_to "Reset", reset_flights_path, method: :get, class: "btn btn-secondary px-4 py-2 py-2 w-100" %>
-    </div>
-    <% flash.each do |key, message| %>
-      <div class="flash-message d-flex align-items-end <%= key == 'notice' ? 'text-success' : 'text-danger' %> font-monospace" data-controller="flash">
-        <%= message %>
-      </div>
-    <% end %>
+  <div>
+    <%= form.label :arrival_airport %>
+    <%= select_tag(:arrival_code, options_for_select(@airports)) %>
   </div>
 
-</div>
+  <div>
+    <%= form.label :"Date of Departure" %>
+    <%= select_tag(:date, options_for_select(@flight_dates)) %>
+  </div>
 
-<div class="row my-3">
+  <div>
+    <%= form.label :"Number of Passengers" %>
+    <%= select_tag(:num_tickets, options_for_select(@num_tickets)) %>
+  </div>
+
+  <%= form.submit "Search", name: nil %>
+<% end %>
+
+
+<%# Search Result %>
+<% if @flights %>
+  <h3> Search Result </h3>
   <% if @flights.any? %>
+
+    <%= form_with url: "/bookings/new/", method: :get do |form| %>
+      <%= form.hidden_field :ticket_count, value: @ticket_count %>
+
       <% @flights.each do |flight| %>
-        <div class="col-12 col-lg-4 col-md-6">
-          <%= link_to new_booking_path(flight_id: flight.id, passengers: params[:passengers]), class: "text-decoration-none" do %>
-            <div class="card mb-3 shadow-sm card-blue">
-              <div class="card-body">
-                <h5 class="card-title">
-                  <%= flight.departure_airport.code %> → <%= flight.arrival_airport.code %>
-                </h5>
-                <p><strong>Start Time:</strong> <%= flight.start_time.strftime('%Y-%m-%d %H:%M') %></p>
-                <p>
-                  <i class="bi bi-stopwatch fw-bold"></i> Duration: <%= flight.duration %> hours
-                </p>
-              </div>
-            </div>
-          <% end %>
+        <div>
+          <%#= flight.id %>
+          <%= flight.departure_airport.name %>  ->
+          <%= flight.arrival_airport.name %> , 
+          <%= flight.start %>
+          - <%= flight.duration %> hours
+          <%= form.radio_button :flight_id, flight.id %>
         </div>
+        <br>
+      <% end %>
+
+      <%= form.submit "Booking", name: nil %>
     <% end %>
-  <% else %>
-    <div class="col-12">
-      <p class="text-center my-3">No flights found for the selected criteria.</p>
-    </div>
+
   <% end %>
-</div>
+<% end %>

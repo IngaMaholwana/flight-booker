@@ -1,33 +1,25 @@
-class FlightsController < ApplicationController 
-  def index 
+class FlightsController < ApplicationController
+  def index
+    @airports = Airport.all.map { |a| [ a.name, a.name ] }
+    @flight_dates = Flight.all.map { |f| [ f.start.strftime("%Y/%m/%d"), f.start.strftime("%Y%m%d") ] }.to_set
+    @num_tickets = (1..4).map { |n| [ n, n ] }
 
-    # Retrieve all airports for the dropdowns 
-    @airports = Airport.all 
+    puts ""
+    if params[:departure_code] && params[:arrival_code] && params[:date]
+      puts params if params
+      departure_airport = Airport.find_by(name: params[:departure_code])
+      arrival_airport = Airport.find_by(name: params[:arrival_code])
 
-    # Use codes instead of IDs for cleaner URLs 
-    @departure_code = params[:departure_code] 
-    @arrival_code = params[:arrival_code] 
-    @selected_date = params[:date].present? ? params[:date].to_date : nil 
-    @passengers = params[:passengers] 
+      start_of_day = Date.strptime(params[:date], "%Y%m%d")
+      end_of_day = start_of_day.end_of_day
 
-    # Find the airport IDs based on the codes 
-    departure_airport = Airport.find_by(code: @departure_code) if @departure_code.present?
-    arrival_airport = Airport.find_by(code: @arrival_code) if @arrival_code.present?
-
-    @flights = Flight.all  
-
-    # Filter flights based on the selected parameters 
-    @flights = @flights.where(departure_airport_id: departure_airport.id) if departure_airport.present? 
-    @flights = @flights.where(arrival_airport_id: arrival_airport.id) if arrival_airport.present? 
-    @flights = @flights.available_on(@selected_date) if @selected_date.present? 
-
-    # For the date picker min/max values 
-    @available_dates = Flight.select(:start_time).distinct.pluck(:start_time).map(&:to_datetime) 
-  end 
-
-  def reset
-    flash[:notice] = "The reset was successful"
-    redirect_to root_path
+      @flights = Flight
+        .where(departure_airport_id: departure_airport.id)
+        .where(arrival_airport_id: arrival_airport.id)
+        .where(start: start_of_day..end_of_day)
+        .includes(:departure_airport, :arrival_airport)
+      @ticket_count = params[:num_tickets]
+    end
+    puts ""
   end
-
-end 
+end

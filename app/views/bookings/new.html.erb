@@ -1,47 +1,58 @@
-<h1 class="text-center py-4">New Booking</h1>
+<h2>New Booking</h2>
 
-<div class="card shadow-sm my-4">
-  <div class="card-body">
-    <h3 class="card-title text-primary text-center mt-3"> Flight Details </h3>
-    <p><strong>From:</strong> <%= @flight.departure_airport.code %></p>
-    <p><strong>To:</strong> <%= @flight.arrival_airport.code %></p>
-    <p><strong>Departure Time:</strong> <%= @flight.start_time.strftime('%Y-%m-%d %H:%M') %></p>
-    <p><strong>Duration:</strong> <%= @flight.duration %> hours</p>
-    <p><strong>Passengers:</strong> <%= @passengers %> </p>
-  </div>
+<div>
+    <%= @flight.departure_airport.name %> ->
+    <%= @flight.arrival_airport.name %>
+
+    <p>Duration : <%= @flight.duration %> hours </p>
+    <p>Departure Time : <%= @flight.start %></p>
 </div>
 
-<div class="card shadow-sm my-4">
-  <div class="card-body">
-    <%= form_with model: @booking, url: bookings_path, method: :post, local: true do |form| %>
-      <%= form.hidden_field :flight_id, value: @flight.id %>
-      <%= form.hidden_field :passengers, value: @passengers %>
+<%# Booking Form %>
 
-      <h3 class="card-title text-primary text-center mt-3">Passenger Information</h3>
+<div data-controller="passenger" data-passenger-count-value=<%= @ticket_count%>>
 
-      <% @booking.passengers.each_with_index do |passenger, index| %>
-        <h4 class="my-5">Passenger <%= index + 1 %></h4>
-          <%= form.fields_for :passengers, passenger do |passenger_form| %>
-            <div class="mb-3 row">
-              <%= passenger_form.label :name, "Name", class: "col-sm-2 col-form-label" %>
-              <div class="col-sm-10">
-                <%= passenger_form.text_field :name, class: "form-control", required: true %>
-              </div>
+<h3>Please fill in passenger info (<%= @ticket_count %>):</h3>
+<button data-action="click->passenger#add">Add passenger</button>
+
+<%= form_with model: @booking do |f| %>
+    <%= f.hidden_field :flight_id, value: @flight.id %>
+
+    <div data-passenger-target = "container">
+        <%= f.fields_for :passengers do |sub_form, n| %>
+            <div data-passenger-target = "subForm">
+                <h4>Passengers #<%= sub_form.options[:child_index] + 1 %></h4>
+                <%= sub_form.label :name %>
+                <%= sub_form.text_field :name %>
+                <br>
+                <%= sub_form.label :email %>
+                <%= sub_form.text_field :email %>
+                <br>
             </div>
-            <div class="mb-3 row">
-              <%= passenger_form.label :email, "Email", class: "col-sm-2 col-form-label" %>
-              <div class="col-sm-10">
-                <%= passenger_form.email_field :email, class: "form-control", required: true %>
-              </div>
+        <% end %>
+
+
+        <%# hidden tempalte %>
+        <template data-passenger-target="template">
+        <%= f.fields_for :passengers, Passenger.new, child_index: "NEW_RECORD" do |sub_form, n| %>
+            <div data-passenger-target = "subForm">
+                <h4>Passengers #NEW_RECORD</h4>
+                <%= sub_form.label :name %>
+                <%= sub_form.text_field :name %>
+                <br>
+                <%= sub_form.label :email %>
+                <%= sub_form.text_field :email %>
+                <br>
             </div>
-          <% end %>
-      <% end %>
-      
-      <div class="d-flex justify-content-center mt-4">
-        <%= form.submit "Confirm Booking", class: "btn btn-success px-4 py-2" %>
-      </div>
-    <% end %>
-  </div>
+            <% end %>
+        </template>
+
+    </div>
+
+    <button data-action="click->passenger#remove">Remove passenger </button>
+    <br>
+    <%= f.submit "Submit" %>
+<% end %>
+
+
 </div>
-
-
